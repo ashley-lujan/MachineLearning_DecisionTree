@@ -69,41 +69,38 @@ def question2_1():
     l1 = getCarAttributes("s")
     calcs = ["Ent", "ME", "G"]
     print("\t \t \t", end="")
-    for i in range(1, 6):
+    for i in range(1, 7):
         print(i, end="\t")
     print("average", "")
     for measure in calcs:
         print("for ", measure, ": ")
-        print("test", end="\t")
+        print("train", end="\t")
         average = 0
         for i in range(1, 7):
             dataSet = saveDataSet('datasets/car/train.csv')
             d3 = DecisionTree(dataSet, l1, False, i, measure)
             accuracy = evaluateModel(d3, 'car','train')
             average += accuracy
-            print("", round(accuracy, 3), end="\t")
-        print(round(average/6, 3))
-        print("train", end="\t")
+            print("", round(accuracy, 3),  end=" & ")
+        print(round(average / 6, 3))
+        print("test", end="\t")
         average = 0
-        for i in range(1, 6):
+        for i in range(1, 7):
             dataSet = saveDataSet('datasets/car/train.csv')
             d3 = DecisionTree(dataSet, l1, False, i, measure)
-            accuracy = evaluateModel(d3, 'car', 'train')
+            accuracy = evaluateModel(d3, 'car', 'test')
             average += accuracy
-            print("", round(accuracy, 3), end="\t")
+            print("", round(accuracy, 3), end= " & ")
         print(round(average / 6, 3))
         print("")
 
 def question2_2_1():
     calcs = ["Ent", "ME", "G"]
-    print("\t \t \t", end="")
+    print("dataset\t Measurement \t average")
     max_depth = 17
-    for i in range(1, max_depth):
-        print(i, end="\t")
-    print("average", "")
     for measure in calcs:
-        print("for ", measure, ": ")
-        print("test", end="\t")
+        # print("for ", measure, ": ")
+        # print("test", end="\t")
         average = 0
         for i in range(1, max_depth):
             dataSet = saveDataSet('datasets/bank/train.csv')
@@ -112,8 +109,8 @@ def question2_2_1():
             accuracy = evaluateModel(d3, 'bank', 'train')
             average += accuracy
             print("", round(accuracy, 3), end="\t")
-        print(round(average / max_depth, 3))
-        print("train", end="\t")
+        print("\ntrain & ", measure, " & ", round(average / (max_depth - 1), 3), " \\\\ \\hline")
+        # print("train", end="\t")
         average = 0
         for i in range(1, max_depth):
             dataSetTrain = saveDataSet('datasets/bank/train.csv')
@@ -122,11 +119,42 @@ def question2_2_1():
             accuracy = evaluateModel(d3, 'bank', 'test')
             average += accuracy
             print("", round(accuracy, 3), end="\t")
-        print(round(average / max_depth, 3))
+        print("\ntest & ", measure, " & ", round(average / (max_depth - 1), 3), " \\\\ \\hline")
+        print("")
+
+def question2_2_2():
+    calcs = ["Ent", "ME", "G"]
+    print("\t \t \t", end="")
+    max_depth = 17
+    print("dataset\t Measurement \t average")
+    for measure in calcs:
+        average = 0
+        for i in range(1, max_depth):
+            dataSet = saveDataSet('datasets/bank/train.csv')
+            attrs = getBankAttributes()
+            d3 = DecisionTree(dataSet, attrs, True, i, measure, True)
+            accuracy = evaluateModel(d3, 'bank', 'train')
+            average += accuracy
+            print("", round(accuracy, 3), end="\t")
+        print("\n train & ", measure, " & ", round(average / (max_depth - 1), 3), " \\\\ \\hline")
+        # print("train", end="\t")
+        average = 0
+        for i in range(1, max_depth):
+            dataSetTrain = saveDataSet('datasets/bank/train.csv')
+            attrs = getBankAttributes()
+            d3 = DecisionTree(dataSetTrain, attrs, True, i, measure, True)
+            accuracy = evaluateModel(d3, 'bank', 'test')
+            average += accuracy
+            print("", round(accuracy, 3), end="\t")
+        print("\n test & ", measure, " & ", round(average / (max_depth - 1), 3), " \\\\ \\hline")
         print("")
 
 if __name__ == '__main__':
-    # question2_1()
+    print("question 2.1 with car")
+    question2_1()
+    print("question 2.2.a with bank")
     question2_2_1()
+    print("question 2.2.b with bank")
+    question2_2_2()
 
 

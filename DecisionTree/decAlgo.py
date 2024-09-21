@@ -25,16 +25,8 @@ class DecisionTree:
     less = "0"
     greaterE = "1"
 
-    def __init__(self, dataSet : list, attributesWithValues : dict, max_depth, measurement):
-        print("second constr")
-        self.root = Node(1)
-        self.attributes = attributesWithValues
-        self.measurement = measurement
-        self.hasNumerics = False
-        self.medians = {}
-        self.formDecision(self.root, dataSet, (list)(attributesWithValues.keys()), max_depth)
 
-    def __init__(self, dataSet : list, attributesWithValues : dict, hasNumerics : bool,  max_depth, measurement):
+    def __init__(self, dataSet : list, attributesWithValues : dict, hasNumerics : bool, max_depth, measurement,  replaceMissing = False,):
         self.root = Node(1)
         self.attributes = attributesWithValues
         self.measurement = measurement
@@ -42,7 +34,33 @@ class DecisionTree:
         self.medians = {}
         if hasNumerics:
             self.processDataSet(dataSet, attributesWithValues)
+        if replaceMissing:
+            self.replaceUnknown(dataSet, attributesWithValues)
         self.formDecision(self.root, dataSet, (list)(attributesWithValues.keys()), max_depth)
+
+    def replaceUnknown(self, dataSet, attrs):
+        for i, attr in enumerate(attrs):
+            if "unknown" in attrs[attr]:
+                mostCommon = self.mostCommon(dataSet, i, attrs[attr])
+                self.replaceCols(dataSet, i,"unknown", mostCommon)
+
+    def mostCommon(self, dataSet, i, values):
+        track = {}
+        for v in values:
+            track[v] = 0
+
+        for row in dataSet:
+            value = row[i]
+            track[value] = track[value] + 1
+
+        return max(track, key=track.get)
+
+    def replaceCols(self, dataSet, i, wordToReplace, replacer):
+        for row in dataSet:
+            if row[i] == wordToReplace:
+                row[i] = replacer
+
+
 
     def processDataSet(self, dataSet, attrs):
         for i, attr in enumerate(attrs):
@@ -50,7 +68,7 @@ class DecisionTree:
                 med = self.findMedian(dataSet, i)
                 self.medians[i] = med
                 self.replaceWithBinary(dataSet, i, med)
-                attrs[attr] = [self.less, self.greaterE, "unknown"]
+                attrs[attr] = [self.less, self.greaterE]
 
     def findMedian(self, dataSet, i):
         l = []
