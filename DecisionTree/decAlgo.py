@@ -1,5 +1,5 @@
-import pandas as pd
 import math
+import statistics
 
 class Node:
     def __init__(self, level ):
@@ -22,19 +22,50 @@ class Node:
 
 class DecisionTree:
     #don't change value of self.attributes --> maintains index of what columns are
+    less = "0"
+    greaterE = "1"
 
     def __init__(self, dataSet : list, attributesWithValues : dict, max_depth, measurement):
+        print("second constr")
         self.root = Node(1)
         self.attributes = attributesWithValues
         self.measurement = measurement
+        self.hasNumerics = False
+        self.medians = {}
         self.formDecision(self.root, dataSet, (list)(attributesWithValues.keys()), max_depth)
 
-    def __init__(self, dataSet : list, attributesWithValues : dict, updateLabel : int,  max_depth, measurement):
+    def __init__(self, dataSet : list, attributesWithValues : dict, hasNumerics : bool,  max_depth, measurement):
         self.root = Node(1)
         self.attributes = attributesWithValues
         self.measurement = measurement
-        #preprocess dataset at updateLabel
+        self.hasNumerics = hasNumerics
+        self.medians = {}
+        if hasNumerics:
+            self.processDataSet(dataSet, attributesWithValues)
         self.formDecision(self.root, dataSet, (list)(attributesWithValues.keys()), max_depth)
+
+    def processDataSet(self, dataSet, attrs):
+        for i, attr in enumerate(attrs):
+            if attrs[attr] == "numeric":
+                med = self.findMedian(dataSet, i)
+                self.medians[i] = med
+                self.replaceWithBinary(dataSet, i, med)
+                attrs[attr] = [self.less, self.greaterE, "unknown"]
+
+    def findMedian(self, dataSet, i):
+        l = []
+        for row in dataSet:
+            l.append(int(row[i]))
+        return statistics.median(l)
+
+    def replaceWithBinary(self, dataSet, i, med):
+        for row in dataSet:
+            val = int(row[i])
+            if val >= med:
+                row[i] = self.greaterE
+            else:
+                row[i] = self.less
+
 
 
     def measurer(self, l):
@@ -180,12 +211,22 @@ class DecisionTree:
 
         print("}")
 
+    def getValue(self, l, index):
+        if self.hasNumerics and index in self.medians:
+            if int(l[index]) < self.medians[index]:
+                return self.less
+            else:
+                return self.greaterE
+        else:
+            return l[index]
+
+
     def predict(self, node, l):
         if node.isLeafNode:
             return node.label
         else:
             index = (list)(self.attributes.keys()).index(node.attribute)
-            rowValue = l[index]
+            rowValue = self.getValue(l, index)
             nextBranch = node.branches[rowValue]
             return self.predict(nextBranch, l)
 

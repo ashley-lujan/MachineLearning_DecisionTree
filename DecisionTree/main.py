@@ -4,17 +4,13 @@ import math
 
 def processAttributesAndValues(filename):
     df = pd.read_csv(filename + '/train.csv', header=None)
-    attributes = getAttributes(filename)
+    attributes = getCarAttributes(filename)
     for i in range(0, len(attributes)):
         values = df[i].value_counts()
         print("for attribute", attributes[i], " i have these values: ", values)
     return df
 
-def getAttributes(filename) :
-    # with open(filename + '/data-desc.txt', 'r') as f:
-    #     for line in f:
-    #         print(line.strip())
-    # if (filename == )
+def getCarAttributes(filename) :
     car_attributes = {
         "buying": ["vhigh", "high", "med", "low"],
         "maint": ["vhigh", "high", "med", "low"],
@@ -24,24 +20,28 @@ def getAttributes(filename) :
         "safety": ["low", "med", "high"]
     }
     return car_attributes
-    # return [
-    #     "age",
-    #     "job",
-    #     "marital",
-    #     "education",
-    #     "default",
-    #     "balance",
-    #     "housing",
-    #     "loan",
-    #     "contact",
-    #     "day",
-    #     "month",
-    #     "duration",
-    #     "campaign",
-    #     "pdays",
-    #     "previous",
-    #     "poutcome"
-    # ]
+
+def getBankAttributes() :
+    bank_attributes = {
+        "age": "numeric",
+        "job": ["admin.", "unknown", "unemployed", "management", "housemaid", "entrepreneur", "student", "blue-collar", "self-employed", "retired", "technician", "services"],
+        "marital": ["married", "divorced", "single"],
+        "education": ["unknown", "secondary", "primary", "tertiary"],
+        "default": ["yes", "no"],
+        "balance": "numeric",
+        "housing": ["yes", "no"],
+        "loan": ["yes", "no"],
+        "contact": ["unknown", "telephone", "cellular"],
+        "day": "numeric",
+        "month": ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"],
+        "duration": "numeric",
+        "campaign": "numeric",
+        "pdays": "numeric",
+        "previous": "numeric",
+        "poutcome": ["unknown", "other", "failure", "success"]
+    }
+    return bank_attributes
+
 def saveDataSet(filename):
     result = []
     inti = 0
@@ -53,8 +53,8 @@ def saveDataSet(filename):
             result.append(terms)
     return result
 
-def evaluateModel(d3, csv):
-    testSet = saveDataSet('datasets/car/' + csv + '.csv')
+def evaluateModel(d3, packet, csv):
+    testSet = saveDataSet('datasets/' + packet + '/' + csv + '.csv')
     correct = 0
     for test in testSet:
         prediction = d3.predict(d3.root, test)
@@ -63,10 +63,10 @@ def evaluateModel(d3, csv):
     return correct/len(testSet)
 
 
-if __name__ == '__main__':
+def question2_1():
     #Question 2.1
     dataSet = saveDataSet('datasets/car/train.csv')
-    l1 = getAttributes("s")
+    l1 = getCarAttributes("s")
     calcs = ["Ent", "ME", "G"]
     print("\t \t \t", end="")
     for i in range(1, 6):
@@ -77,9 +77,9 @@ if __name__ == '__main__':
         print("test", end="\t")
         average = 0
         for i in range(1, 7):
-            dataSet = saveDataSet('datasets/car/test.csv')
-            d3 = DecisionTree(dataSet, l1, i, measure)
-            accuracy = evaluateModel(d3, 'train')
+            dataSet = saveDataSet('datasets/car/train.csv')
+            d3 = DecisionTree(dataSet, l1, False, i, measure)
+            accuracy = evaluateModel(d3, 'car','train')
             average += accuracy
             print("", round(accuracy, 3), end="\t")
         print(round(average/6, 3))
@@ -87,20 +87,46 @@ if __name__ == '__main__':
         average = 0
         for i in range(1, 6):
             dataSet = saveDataSet('datasets/car/train.csv')
-            d3 = DecisionTree(dataSet, l1, i, measure)
-            accuracy = evaluateModel(d3, 'train')
+            d3 = DecisionTree(dataSet, l1, False, i, measure)
+            accuracy = evaluateModel(d3, 'car', 'train')
             average += accuracy
             print("", round(accuracy, 3), end="\t")
         print(round(average / 6, 3))
         print("")
 
+def question2_2_1():
+    calcs = ["Ent", "ME", "G"]
+    print("\t \t \t", end="")
+    max_depth = 17
+    for i in range(1, max_depth):
+        print(i, end="\t")
+    print("average", "")
+    for measure in calcs:
+        print("for ", measure, ": ")
+        print("test", end="\t")
+        average = 0
+        for i in range(1, max_depth):
+            dataSet = saveDataSet('datasets/bank/train.csv')
+            attrs = getBankAttributes()
+            d3 = DecisionTree(dataSet, attrs, True, i, measure)
+            accuracy = evaluateModel(d3, 'bank', 'train')
+            average += accuracy
+            print("", round(accuracy, 3), end="\t")
+        print(round(average / max_depth, 3))
+        print("train", end="\t")
+        average = 0
+        for i in range(1, max_depth):
+            dataSetTrain = saveDataSet('datasets/bank/train.csv')
+            attrs = getBankAttributes()
+            d3 = DecisionTree(dataSetTrain, attrs, True, i, measure)
+            accuracy = evaluateModel(d3, 'bank', 'test')
+            average += accuracy
+            print("", round(accuracy, 3), end="\t")
+        print(round(average / max_depth, 3))
+        print("")
 
-    # d3.printTree(d3.root, "root")
+if __name__ == '__main__':
+    # question2_1()
+    question2_2_1()
 
-
-    # print("I got this number correct", correct/len(testSet))
-
-    # print(d3.predict(d3.root, ["vhigh","vhigh","5more","4","big","med","acc"]))
-    # print("hello world!")
-    # result = processAttributesAndValues('datasets/bank')
 
