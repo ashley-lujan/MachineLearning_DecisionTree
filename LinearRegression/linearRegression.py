@@ -1,5 +1,5 @@
 # from utils.helpful import saveDataSet
-import math
+import math, random
 error_threshold = math.pow(10, -6)
 maxT = 10000
 
@@ -24,11 +24,26 @@ def w_zero(length):
         w.append(0)
     return w
 
-#should return w
 def gradientDescent(w, r, threshold, dataset):
     t = 0
     while totalError(w, dataset) > threshold: 
         gradient = batchGradient(w, dataset)
+        w = updateW(w, gradient, r)
+        t +=1   
+        if t > maxT:
+            break 
+    return w
+
+def randomSample(dataset): 
+    m = len(dataset)
+    i = random.randint(0, m-1)
+    return [dataset[i]]
+
+def stochasticDescent(w, r, threshold, dataset):
+    t = 0
+    while totalError(w, dataset) > threshold: 
+        gradSample = randomSample(dataset)
+        gradient = batchGradient(w, gradSample)
         w = updateW(w, gradient, r)
         t +=1   
         if t > maxT:
@@ -51,6 +66,7 @@ def batchGradient(w, dataset):
             error_sum += error * row[j]
         wnext.append(-error_sum)
     return wnext
+
 
 def calcError(x, w): 
     yi = x[len(x) - 1]
@@ -75,7 +91,7 @@ def linearMain():
     wlength = len(dataSet[0]) - 1
     w0 = w_zero(wlength)
 
-    model = gradientDescent(w0, 0.01, error_threshold, dataSet)
+    model = stochasticDescent(w0, 0.01, error_threshold, dataSet)
     print(model)
     print("error", testWith(model, 'concrete/test.csv'))
 
