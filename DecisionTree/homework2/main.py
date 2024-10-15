@@ -1,14 +1,14 @@
-import pandas as pd
+# import pandas as pd
 from decAlgo import Node, DecisionTree
 import math
 
-def processAttributesAndValues(filename):
-    df = pd.read_csv(filename + '/train.csv', header=None)
-    attributes = getCarAttributes(filename)
-    for i in range(0, len(attributes)):
-        values = df[i].value_counts()
-        print("for attribute", attributes[i], " i have these values: ", values)
-    return df
+# def processAttributesAndValues(filename):
+#     df = pd.read_csv(filename + '/train.csv', header=None)
+#     attributes = getCarAttributes(filename)
+#     for i in range(0, len(attributes)):
+#         values = df[i].value_counts()
+#         print("for attribute", attributes[i], " i have these values: ", values)
+#     return df
 
 def getCarAttributes(filename) :
     car_attributes = {
