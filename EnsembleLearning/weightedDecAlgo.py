@@ -26,16 +26,36 @@ class DecisionTree:
     greaterE = "1"
 
 
-    def __init__(self, dataSet : list, attributesWithValues : dict, hasNumerics : bool, max_depth, replaceMissing = False,):
+    def __init__(self, dataSet : list, attributesWithValues : dict, dataMedians : dict, max_depth, replaceMissing = False,):
         self.root = Node(1)
         self.attributes = attributesWithValues
-        self.hasNumerics = hasNumerics
-        self.medians = {}
-        if hasNumerics:
-            self.processDataSet(dataSet, attributesWithValues)
+        self.hasNumerics = True
+        self.medians = dataMedians
+        # if hasNumerics:
+        #     self.processDataSet(dataSet, attributesWithValues)
         if replaceMissing:
             self.replaceUnknown(dataSet, attributesWithValues)
         self.formDecision(self.root, dataSet, (list)(attributesWithValues.keys()), max_depth)
+        
+        self.at = self.computeEt(dataSet)
+
+
+    def computeEt(self, dataSet): 
+        sum = 0
+        for x in dataSet: 
+            sum += (x.weight * self.correctness(x))
+        return (1/2) - ((1/2) * sum)
+    
+    def correctness(self, x):
+        x_data = x.data
+        return self.translateBool(x_data[len(x_data) -1]) * self.translateBool(self.predict(self.root, x.data))
+    
+    def translateBool(self, value): 
+        if value == "yes": 
+            return 1
+        print("no")
+
+        
 
     def replaceUnknown(self, dataSet, attrs):
         for i, attr in enumerate(attrs):
@@ -222,14 +242,16 @@ class DecisionTree:
 
         print("}")
 
+    
+
     def getValue(self, l, index):
         if self.hasNumerics and index in self.medians:
-            if int(l.data[index]) < self.medians[index]:
+            if int(l[index]) < self.medians[index]:
                 return self.less
             else:
                 return self.greaterE
         else:
-            return l.data[index]
+            return l[index]
 
 
     def predict(self, node, l):
