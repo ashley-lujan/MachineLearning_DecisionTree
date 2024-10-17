@@ -1,4 +1,5 @@
 # from utils.helpful import saveDataSet
+#use matplot
 import math, random
 error_threshold = math.pow(10, -6)
 maxT = 10000
@@ -30,8 +31,7 @@ def gradientDescent(w, r, threshold, dataset):
         gradient = batchGradient(w, dataset)
         w = updateW(w, gradient, r)
         t +=1   
-        if t > maxT:
-            break 
+        print(totalError(w, dataset))
     return w
 
 def randomSample(dataset): 
@@ -57,6 +57,7 @@ def totalError(w, dataset):
         total += (error * error)
     return total * (1/2)
 
+#[]
 def batchGradient(w, dataset):
     wnext = []
     for j, wj in enumerate(w): 
@@ -87,13 +88,13 @@ def updateW(w, grad, r):
 
 
 def linearMain(): 
-    dataSet = saveDataSet('concrete/train.csv')
+    dataSet = saveDataSet('../datasets/concrete/train.csv')
     wlength = len(dataSet[0]) - 1
     w0 = w_zero(wlength)
 
-    model = stochasticDescent(w0, 0.01, error_threshold, dataSet)
+    model = gradientDescent(w0, 1, error_threshold, dataSet)
     print(model)
-    print("error", testWith(model, 'concrete/test.csv'))
+    # print("error", testWith(model, '../datasets/concrete/test.csv'))
 
 
 
