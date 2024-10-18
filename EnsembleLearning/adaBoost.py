@@ -5,6 +5,11 @@ from randomForest import RandomForestTree
 from random import randint
 import statistics, math
 
+import matplotlib.pyplot as plt
+import numpy as np
+
+
+
 TRAIN = "train"
 TEST = "test"
 
@@ -232,8 +237,32 @@ def randomForest():
 
 
 
+import matplotlib.rcsetup as rcsetup
+import plotly.express as px
+
+
 
 if __name__ == '__main__':
     # adaBoost()
     # baggedTrees()
-    randomForest()
+    # randomForest()
+    # Sample data
+
+    df = px.data.iris()  # Example dataset
+    fig = px.scatter(df, x='sepal_width', y='sepal_length', color='species')
+    fig.show()
+
+    # print(rcsetup.all_backends)
+    
+    # x = np.arange(0, 10, 0.1)
+    # y1 = np.sin(x)
+    # y2 = np.cos(x)
+
+    # plt.plot(x, y1, x, y2)
+
+    # plt.show()
+
+    while True: 
+        l = input()
+        if l == "quit": 
+            break
