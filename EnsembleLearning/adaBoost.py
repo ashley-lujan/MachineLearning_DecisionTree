@@ -1,8 +1,12 @@
 from weightedSet import WeightedX, Classifiers
 from weightedDecAlgo import WeightedDecisionTree
 from decAlgo import DecisionTree
+from randomForest import RandomForestTree
 from random import randint
 import statistics, math
+
+TRAIN = "train"
+TEST = "test"
 
 #returns a list of weightedX's
 def saveDataSet(filename):
@@ -57,8 +61,7 @@ def replaceWithBinary(dataSet, i, med):
         else:
             row.data[i] = WeightedDecisionTree.less
 
-def evaluateModel(d3, csv):
-    testSet = saveDataSet('datasets/bank/' + csv + '.csv')
+def evaluateModel(d3, testSet):
     correct = 0
     for test in testSet:
         prediction = d3.predict(test)
@@ -170,15 +173,59 @@ def experiment():
     experiment_runs = 100
     training_size = 1000
     trees_to_learn = 500
+    first_predictor_size = 100
 
     dataSet = saveDataSet('datasets/bank/train.csv')
+    predictors = []
     for run in range(experiment_runs): 
         baggedSet = randomizeSet(dataSet, training_size)
         trees = []
-        for tree_to_learn in trees_to_learn: 
+        #todo: I don't know what the heck this means
+        #For comparison, pick the first tree in each run to get 100 fully expanded trees (i.e. single trees)
+        #the rest get full 
+        for tree_to_learn in range(trees_to_learn): 
             d3 = DecisionTree(dataSet=baggedSet, attributesWithValues=getBankAttributes(), hasNumerics=True, max_depth= math.inf , replaceMissing=True)
             trees.append(d3)
-            
+        predictors.append(trees)
+
+def randomForest(): 
+    dataSet = saveDataSet('datasets/bank/train.csv')
+    testSet = saveDataSet('datasets/bank/test.csv')
+    evaluations = {
+        2 : {
+            TRAIN: [], 
+            TEST: []
+        }, 
+        4 : {
+            TRAIN: [], 
+            TEST: []
+        }, 
+        6 : {
+            TRAIN: [], 
+            TEST: []
+        }
+    }
+    T = 50
+    trees = []
+    for t in range(T): 
+        random_set_size = (t % 3) * 2 + 2
+        d3 = RandomForestTree(random_set_size, dataSet=dataSet, attributesWithValues=getBankAttributes(), hasNumerics=True, max_depth= math.inf , replaceMissing=True)
+        trees.append(d3)
+        train_error = evaluateModel(d3, dataSet)
+        test_error = evaluateModel(d3, testSet)
+        evaluations[random_set_size][TRAIN].append(train_error)
+        evaluations[random_set_size][TEST].append(test_error)
+    
+    for i in range(2, 8, 2): 
+        print("with size", i)
+        question = evaluations[i]
+        for j in question[TEST]:
+            print(j)
+
+
+    
+    
+
 
 
         
@@ -187,5 +234,6 @@ def experiment():
 
 
 if __name__ == '__main__':
-    adaBoost()
+    # adaBoost()
     # baggedTrees()
+    randomForest()
