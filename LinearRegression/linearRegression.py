@@ -1,6 +1,8 @@
 # from utils.helpful import saveDataSet
 #use matplot
 import math, random
+import numpy as np
+import matplotlib.pyplot as plt
 error_threshold = math.pow(10, -6)
 maxT = 10000
 
@@ -27,12 +29,17 @@ def w_zero(length):
 
 def gradientDescent(w, r, threshold, dataset):
     t = 0
-    while totalError(w, dataset) > threshold: 
+    prevError = math.inf
+    currentError = totalError(w, dataset)
+    cost_values = [currentError]
+    while abs(currentError - prevError) > threshold:
         gradient = batchGradient(w, dataset)
         w = updateW(w, gradient, r)
-        t +=1   
-        print(totalError(w, dataset))
-    return w
+        t +=1
+        prevError = currentError
+        currentError = totalError(w, dataset)
+        cost_values.append(currentError)
+    return cost_values
 
 def randomSample(dataset): 
     m = len(dataset)
@@ -87,16 +94,34 @@ def updateW(w, grad, r):
     return result
 
 
-def linearMain(): 
-    dataSet = saveDataSet('../datasets/concrete/train.csv')
+def descent(dataSet, r_lst, title, descentFunc):
     wlength = len(dataSet[0]) - 1
+
     w0 = w_zero(wlength)
 
-    model = gradientDescent(w0, 1, error_threshold, dataSet)
-    print(model)
-    # print("error", testWith(model, '../datasets/concrete/test.csv'))
+    for r in r_lst:
+        cost_values = descentFunc(w0, r, error_threshold, dataSet)
+        x = np.arange(0, len(cost_values), 1)
+        plt.plot(x, cost_values)
+        plt.xlabel('Iteration')
+        plt.ylabel('Total Error')
+
+        # Add a title
+        plt.title(title + ' Total Error at Each Iteration for R = ' + str(r))
+        plt.show()
+
+
+def linearMain():
+    dataSet = saveDataSet('../datasets/concrete/train.csv')
+    descent(dataSet, [1, 0.5, 0.25, 0.125, 0.01], 'Batch Gradient', gradientDescent)
+    descent(dataSet, [0.125, 0.01, 0.001, 0.0001, 0.00001, 0.000001], 'Stochastic Gradient', stochasticDescent)
+
+
+
+
 
 
 
 if __name__ == '__main__':
     linearMain()
+    # linearMain([1])
