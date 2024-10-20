@@ -124,13 +124,22 @@ simple = {
 }
 
 
-def evaluateAdaBoost(testSet, trees):
+def evaluateAdaBoost(testSet, trees, saved_pred):
     correct = 0
-    for test in testSet:
-        prediction = calcFinal(trees, test)
+    for i, test in enumerate(testSet):
+        prediction = calcFinalKnowing(trees, saved_pred, test, i)
         if prediction == test[len(test) - 1]:
             correct += 1
     return correct / len(testSet)
+
+
+def calcFinalKnowing(trees, saved_pred, x, j):
+    sum = 0
+    for i, tree in enumerate(trees):
+        sum += tree.at * translate(saved_pred[i][j])
+    if sum > 0:
+        return "yes"
+    return "no"
 
 
 def evaluateBagging(testSet, trees):
@@ -196,24 +205,32 @@ def adaBoost():
         TEST: []
     }
 
-    T = 20
+    trees_train = []
+    trees_test = []
+
+
+    T = 500
     for t in range(T):
         d3 = WeightedDecisionTree(dataSet=dataSet, attributesWithValues=attributes, dataMedians=dataMedians,
                                   max_depth=2, replaceMissing=True)
         d3.reweigh_dataSet(dataSet)
         trees.append(d3)
 
-        trainAdaError = evaluateAdaBoost(trainSet, trees)
-        testAdaError = evaluateAdaBoost(testSet, trees)
+        #added code
+        train_saved = savePredictions(d3, trainSet)
+        test_saved = savePredictions(d3, testSet)
 
-        adaBoostErrors[TRAIN].append(trainAdaError)
-        adaBoostErrors[TEST].append(testAdaError)
+        stumpErrors[TRAIN].append(train_saved.accuracy)
+        stumpErrors[TEST].append(test_saved.accuracy)
 
-        trainStumpError = evaluateModel(d3, trainSet)
-        testStumpError = evaluateModel(d3, testSet)
+        trees_train.append(train_saved.predictions)
+        trees_test.append(test_saved.predictions)
 
-        stumpErrors[TRAIN].append(trainStumpError)
-        stumpErrors[TEST].append(testStumpError)
+        # adaBoostErrors[TRAIN].append(evaluateAdaBoost(trainSet, trees, trees_train))
+        # adaBoostErrors[TEST].append(evaluateAdaBoost(testSet, trees, trees_test))
+
+        if t % 20 == 0:
+            print("at run ", t)
 
     # he first figure shows how the training and test errors vary along with T. The second figure shows the training
     # and test errors of all the decision stumps learned in each iteration.
@@ -224,7 +241,7 @@ def adaBoost():
 
 
 def displayPlot(title, T, x_title, y_title, y1, y2):
-    x = np.arange(0, T, 1)
+    x = range(0, T, 1)
     plt.plot(x, y1, label='Training Data')
     plt.plot(x, y2, label='Testing Data')
 
@@ -306,12 +323,19 @@ def experiment():
     experiment_runs = 100
     training_size = 1000
     trees_to_learn = 500
-    first_predictor_size = 100
+
+    bagged_trees = []
+    single_trees = []
 
     dataSet = saveDataSet('../datasets/bank/train.csv')
+    testSet = saveDataSet('../datasets/bank/test.csv')
     predictors = []
     for run in range(experiment_runs):
         baggedSet = randomizeSet(dataSet, training_size)
+        single_tree = DecisionTree(dataSet=baggedSet, attributesWithValues=getBankAttributes(), hasNumerics=True,
+                              max_depth=math.inf, replaceMissing=True)
+        single_trees.append(single_tree)
+
         trees = []
         # todo: I don't know what the heck this means
         # For comparison, pick the first tree in each run to get 100 fully expanded trees (i.e. single trees)
@@ -321,80 +345,128 @@ def experiment():
                               max_depth=math.inf, replaceMissing=True)
             trees.append(d3)
         predictors.append(trees)
+        if run % 20 == 0:
+            print("at run ", run)
+
+    #single tree
+    sngle_tree_average_bias = 0
+    sngle_tree_average_var = 0
+    for test in testSet:
+        average = 0
+        test_predictions = []
+        for sngle_tree in single_trees:
+            predic = translate(sngle_tree.predict(test))
+            test_predictions.append(predic)
+            average += predic
+        average = average/len(single_trees)
+        expected = translate(test[-1])
+        bias = math.pow(average - expected, 2)
+        sample_var = computeSampleVariance(expected, test_predictions)
+        sngle_tree_average_bias += bias
+        sngle_tree_average_var += sample_var
+    sngle_tree_average_var /= len(single_trees)
+    sngle_tree_average_bias /= len(single_trees)
+    sngle_squared_error = sngle_tree_average_bias + sngle_tree_average_var
+    print("Single Trees")
+    print(sngle_tree_average_bias, sngle_tree_average_var, sngle_squared_error)
+
+    #bagged_trees
+    # single tree
+    sngle_tree_average_bias = 0
+    sngle_tree_average_var = 0
+    for test in testSet:
+        average = 0
+        test_predictions = []
+        for bag in predictors:
+            predic = translate(calcFinal(bag, test, 0))
+            test_predictions.append(predic)
+            average += predic
+        average = average / len(predictors)
+        expected = translate(test[-1])
+        bias = math.pow(average - expected, 2)
+        sample_var = computeSampleVariance(expected, test_predictions)
+        sngle_tree_average_bias += bias
+        sngle_tree_average_var += sample_var
+    sngle_tree_average_var /= len(single_trees)
+    sngle_tree_average_bias /= len(single_trees)
+    sngle_squared_error = sngle_tree_average_bias + sngle_tree_average_var
+    print("Bagged Trees")
+    print(sngle_tree_average_bias, sngle_tree_average_var, sngle_squared_error)
+
+def computeSampleVariance(mu, predictions):
+    n = len(predictions)
+    sum = 0
+    for pred in predictions:
+        sum += math.pow(pred - mu, 2)
+    result = (sum / (n - 1))
+    return result
+
+
+
 
 
 def randomForest():
     dataSet = saveDataSet('../datasets/bank/train.csv')
     testSet = saveDataSet('../datasets/bank/test.csv')
-    evaluations = {
-        2: {
-            TRAIN: [],
-            TEST: []
-        },
-        4: {
-            TRAIN: [],
-            TEST: []
-        },
-        6: {
-            TRAIN: [],
-            TEST: []
-        }
+    T = 500
+    for size in range(2, 8, 2):
+        get_train_test(dataSet, testSet, T, size)
+
+def get_train_test(dataSet, testSet, T, random_set_size):
+    T = 30
+    trees_train = []
+    trees_test = []
+    rain_forst_errors = {
+        TRAIN: [],
+        TEST: []
     }
-    T = 50
-    trees = []
+    tree_errors = {
+        TRAIN: [],
+        TEST: []
+    }
     for t in range(T):
-        random_set_size = (t % 3) * 2 + 2
         d3 = RandomForestTree(random_set_size, dataSet=dataSet, attributesWithValues=getBankAttributes(),
                               hasNumerics=True, max_depth=math.inf, replaceMissing=True)
-        trees.append(d3)
-        train_error = evaluateModel(d3, dataSet)
-        test_error = evaluateModel(d3, testSet)
-        evaluations[random_set_size][TRAIN].append(train_error)
-        evaluations[random_set_size][TEST].append(test_error)
+        train_saved = savePredictions(d3, dataSet)
+        test_saved = savePredictions(d3, testSet)
 
-    for i in range(2, 8, 2):
-        print("with size", i)
-        question = evaluations[i]
-        for j in question[TEST]:
-            print(j)
+        tree_errors[TRAIN].append(train_saved.accuracy)
+        tree_errors[TEST].append(test_saved.accuracy)
 
-    x = np.arange(0, int(50 / 3) + 1, 1)
-    y1 = evaluations[2][TRAIN]
-    y2 = evaluations[2][TEST]
+        trees_train.append(train_saved.predictions)
+        trees_test.append(test_saved.predictions)
 
-    plt.plot(x, y1, label='Training Data')
-    plt.plot(x, y2, label='Testing Data')
+        rain_forst_errors[TRAIN].append(evaluateBagging(dataSet, trees_train))
+        rain_forst_errors[TEST].append(evaluateBagging(testSet, trees_test))
 
-    # Add labels for the axes
-    plt.xlabel('Epochs')
-    plt.ylabel('Accuracy')
+        if t % 20 == 0:
+            print("at", t, "tree")
 
-    # Add a title
-    plt.title('Model Performance Over Epochs')
+    print("starting plot")
 
-    # Show the legend to differentiate between the lines
+    x = np.arange(0, T, 1)
+    plt.plot(x, rain_forst_errors[TRAIN], label='Training Data for Rain Forest')
+    plt.plot(x, rain_forst_errors[TEST], label='Testing Data for Rain Forest')
+
+    plt.plot(x, tree_errors[TRAIN], label='Training Data for Individual')
+    plt.plot(x, tree_errors[TEST], label='Testing Data for Individual')
+
+    plt.xlabel("Trees")
+    plt.ylabel("Accuracy")
+
     plt.legend()
 
-    # Display the plot
+    # Add a title
+    plt.title("Rain Forest Implementation Accuracy Across Trees with Random Size: " + str(random_set_size))
     plt.show()
 
 
+
+
+
 if __name__ == '__main__':
-    # adaBoost()
-    baggedTrees()
+    adaBoost()
+    # baggedTrees()
     # randomForest()
-    # Sample data
+    # experiment()
 
-    # df = px.data.iris()  # Example dataset
-    # fig = px.scatter(df, x='sepal_width', y='sepal_length', color='species')
-    # fig.show()
-
-    # print(rcsetup.all_backends)
-
-    # x = np.arange(0, 10, 0.1)
-    # y1 = np.sin(x)
-    # y2 = np.cos(x)
-    #
-    # plt.plot(x, y1, x, y2)
-    #
-    # plt.show()

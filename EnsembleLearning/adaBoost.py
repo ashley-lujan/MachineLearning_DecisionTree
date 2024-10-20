@@ -341,8 +341,8 @@ def randomForest():
 
 
 if __name__ == '__main__':
-    # adaBoost()
-    baggedTrees()
+    adaBoost()
+    # baggedTrees()
     # randomForest()
     # Sample data
 

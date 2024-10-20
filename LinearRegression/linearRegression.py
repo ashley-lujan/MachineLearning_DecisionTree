@@ -50,7 +50,7 @@ def gradientDescent(w, r, threshold, dataset):
     currentError = totalError(w, dataset)
     cost_values = [currentError]
     while belowThreshold(prevW, w, threshold):
-        gradient = batchGradient(w, dataset)
+        gradient = gradient_loss_vector(w, dataset)
         prevW = w
         w = updateW(w, gradient, r)
         t +=1
@@ -90,7 +90,7 @@ def stochasticDescent(w, r, threshold, dataset):
     cost_values = [currentError]
     while belowThreshold(w, prevW, threshold):
         gradSample = randomSample(dataset)
-        gradient = batchGradient(w, gradSample)
+        gradient = gradient_loss_vector(w, gradSample)
         prevW = w
         w = updateW(w, gradient, r)
         t +=1
@@ -108,13 +108,13 @@ def totalError(w, dataset):
     return total * (1/2)
 
 #[]
-def batchGradient(w, dataset):
+def gradient_loss_vector(w, dataset):
     wnext = []
     for j, wj in enumerate(w): 
         error_sum = 0
         for row in dataset: 
             error = calcError(row, w)
-            error_sum += error * row[j]
+            error_sum += (error * row[j])
         wnext.append(-error_sum)
     return wnext
 
@@ -148,7 +148,11 @@ def descent(dataSet, r_lst, title, descentFunc):
     for r in r_lst:
         gradInfo = descentFunc(w0, r, error_threshold, dataSet)
         cost_values = gradInfo.cost_values
-        x = np.arange(0, len(cost_values), 1)
+        print(w_str(cost_values))
+        x = range(0, len(cost_values), 1)
+        # y = np.arange(cost_values)
+        print(x)
+        # print(y)
         plt.plot(x, cost_values)
         plt.xlabel('Iteration')
         plt.ylabel('Total Error')
@@ -157,11 +161,11 @@ def descent(dataSet, r_lst, title, descentFunc):
         plt.title(title + ' Total Error at Each Iteration for R = ' + str(r))
         plt.show()
 
-        fin_err = cost_values[-1]
-        if fin_err != math.inf:
-            final_error.append(cost_values[-1])
-            rs.append(r)
-        print(gradInfo)
+        # fin_err = cost_values[-1]
+        # if fin_err != math.inf:
+        #     final_error.append(cost_values[-1])
+        #     rs.append(r)
+        # print(gradInfo)
 
     # plt.plot(rs, final_error)
     # plt.xlabel('Rs with no infinite error')
@@ -202,9 +206,9 @@ def linearMain():
         descent(dataSet, [0.25, 0.125, 0.01, 0.001, 0.0001], 'Stochastic Gradient', stochasticDescent)
 
     print("Batch Gradient")
-    descent(dataSet, [.01], 'Batch Gradient', gradientDescent)
+    # descent(dataSet, [.01], 'Batch Gradient', gradientDescent)
     print("Stochastic Gradient")
-    descent(dataSet, [0.25, 0.125, 0.01, 0.001, 0.0001], 'Stochastic Gradient', stochasticDescent)
+    descent(dataSet, [0.125, 0.01, 0.001, .0001], 'Stochastic Gradient', stochasticDescent)
 
     analytical(dataSet)
 
