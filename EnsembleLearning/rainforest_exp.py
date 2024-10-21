@@ -393,6 +393,81 @@ def experimentBaggedTrees():
     print("Bagged Trees")
     print(sngle_tree_average_bias, sngle_tree_average_var, sngle_squared_error)
 
+def experimentRainForest():
+    experiment_runs = 100
+    training_size = 1000
+    trees_to_learn = 500
+
+    bagged_trees = []
+    single_trees = []
+
+    dataSet = saveDataSet('../datasets/bank/train.csv')
+    testSet = saveDataSet('../datasets/bank/test.csv')
+    predictors = []
+    for run in range(experiment_runs):
+        # baggedSet = randomizeSet(dataSet, training_size)
+        single_tree = RandomForestTree(4, dataSet=dataSet, attributesWithValues=getBankAttributes(), hasNumerics=True,
+                              max_depth=math.inf, replaceMissing=True)
+        single_trees.append(single_tree)
+
+        trees = []
+        # todo: I don't know what the heck this means
+        # For comparison, pick the first tree in each run to get 100 fully expanded trees (i.e. single trees)
+        # the rest get full
+        for tree_to_learn in range(trees_to_learn):
+            d3 = RandomForestTree(4, dataSet=dataSet, attributesWithValues=getBankAttributes(), hasNumerics=True,
+                              max_depth=math.inf, replaceMissing=True)
+            trees.append(d3)
+        predictors.append(trees)
+        print("at run ", run)
+
+    #single tree
+    sngle_tree_average_bias = 0
+    sngle_tree_average_var = 0
+    for test in testSet:
+        average = 0
+        test_predictions = []
+        for sngle_tree in single_trees:
+            predic = translate(sngle_tree.predict(test))
+            test_predictions.append(predic)
+            average += predic
+        average = average/len(single_trees)
+        expected = translate(test[-1])
+        bias = math.pow(average - expected, 2)
+        sample_var = computeSampleVariance(expected, test_predictions)
+        sngle_tree_average_bias += bias
+        sngle_tree_average_var += sample_var
+    sngle_tree_average_var /= len(single_trees)
+    sngle_tree_average_bias /= len(single_trees)
+    sngle_squared_error = sngle_tree_average_bias + sngle_tree_average_var
+    print("Single Trees")
+    print(sngle_tree_average_bias, sngle_tree_average_var, sngle_squared_error)
+
+    #bagged_trees
+    # single tree
+    sngle_tree_average_bias = 0
+    sngle_tree_average_var = 0
+    for testi, test in enumerate(testSet):
+        print("considering rainforest", testi)
+        average = 0
+        test_predictions = []
+        for bag in predictors:
+            predic = translate(calcFinal(bag, test, 0))
+            test_predictions.append(predic)
+            average += predic
+        average = average / len(predictors)
+        expected = translate(test[-1])
+        bias = math.pow(average - expected, 2)
+        sample_var = computeSampleVariance(expected, test_predictions)
+        sngle_tree_average_bias += bias
+        sngle_tree_average_var += sample_var
+
+    sngle_tree_average_var /= len(single_trees)
+    sngle_tree_average_bias /= len(single_trees)
+    sngle_squared_error = sngle_tree_average_bias + sngle_tree_average_var
+    print("Rainforest Trees")
+    print(sngle_tree_average_bias, sngle_tree_average_var, sngle_squared_error)
+
 def computeSampleVariance(mu, predictions):
     n = len(predictions)
     sum = 0
@@ -468,5 +543,6 @@ if __name__ == '__main__':
     # adaBoost()
     # baggedTrees()
     # randomForest()
-    experimentBaggedTrees()
+    # experimentBaggedTrees()
+    experimentRainForest()
 

@@ -19,7 +19,7 @@ class gradReturn():
 def w_str(w):
     result = "["
     for wi in w:
-        result += str(round(wi, 4)) + ", "
+        result += str(round(wi, 2)) + ", "
     result = result[0:-2] + "]"
     return result
 
@@ -138,6 +138,7 @@ def updateW(w, grad, r):
 
 
 def descent(dataSet, r_lst, title, descentFunc):
+    testSet = saveDataSet('../datasets/concrete/test.csv')
     wlength = len(dataSet[0]) - 1
 
     w0 = w_zero(wlength)
@@ -146,12 +147,14 @@ def descent(dataSet, r_lst, title, descentFunc):
     rs = []
 
     for r in r_lst:
+        print("\n\n r is ", r)
         gradInfo = descentFunc(w0, r, error_threshold, dataSet)
         cost_values = gradInfo.cost_values
-        print(w_str(cost_values))
+        print("W: ", gradInfo.learned_vector)
+        print("cost of test", gradient_loss_vector(gradInfo.learned_vector, testSet))
+        print("total error in test: ", round(totalError(gradInfo.learned_vector, testSet), 2))
         x = range(0, len(cost_values), 1)
         # y = np.arange(cost_values)
-        print(x)
         # print(y)
         plt.plot(x, cost_values)
         plt.xlabel('Iteration')
@@ -202,16 +205,59 @@ def analytical(dataSet):
 def linearMain():
     dataSet = saveDataSet('../datasets/concrete/train.csv')
     def experimental():
-        descent(dataSet, [1, 0.5, 0.25, 0.125, 0.01, 0.005], 'Batch Gradient', gradientDescent)
+        descent(dataSet, [0.01], 'Batch Gradient', gradientDescent)
         descent(dataSet, [0.25, 0.125, 0.01, 0.001, 0.0001], 'Stochastic Gradient', stochasticDescent)
 
-    print("Batch Gradient")
+    # print("Batch Gradient")
     # descent(dataSet, [.01], 'Batch Gradient', gradientDescent)
-    print("Stochastic Gradient")
-    descent(dataSet, [0.125, 0.01, 0.001, .0001], 'Stochastic Gradient', stochasticDescent)
+    # print("Stochastic Gradient")
+    # descent(dataSet, [0.125, 0.01, 0.001], 'Stochastic Gradient', stochasticDescent)
 
     analytical(dataSet)
 
+
+
+def question5():
+    dataset = [[1, 1, -1, 2, 1], [1, 1, 1, 3, 4], [1, -1, 1, 0, -1], [1, 1, 2, -4, -2], [1, 3, -1, -1, 0]]
+    analytical(dataset)
+
+def question5d():
+    dataset = [[1, 1, -1, 2, 1], [1, 1, 1, 3, 4], [1, -1, 1, 0, -1], [1, 1, 2, -4, -2], [1, 3, -1, -1, 0]]
+    w = [0, 0, 0, 0, 0]
+    r = 0.1
+    for it, example in enumerate(dataset):
+        w_t_1 = [0] * len(w)
+        grad = [0] * len(w)
+        error = example[-1] - predict(w, example)
+        print(it, end=" & ")
+        for i, wi in enumerate(w):
+            grad[i] = (error) * example[i]
+            w_t_1[i] = wi + r * grad[i]
+        print(w_str(grad), end=" & ")
+        print(w_str(w[1:]), end=" & ")
+        print(round(w[0], 4), end=" \\\\ \\hline ")
+        print("")
+
+        w = w_t_1
+
+def question5c():
+    dataset = [[1, 1, -1, 2, 1], [1, 1, 1, 3, 4], [1, -1, 1, 0, -1], [1, 1, 2, -4, -2], [1, 3, -1, -1, 0]]
+    w = [0, 0, 0, 0, 0]
+    r = 0.1
+    for it, example in enumerate(dataset):
+        w_t_1 = [0] * len(w)
+        grad = [0] * len(w)
+        error = example[-1] - predict(w, example)
+        print(it, end=" & ")
+        for i, wi in enumerate(w):
+            grad[i] = (error) * example[i]
+            w_t_1[i] = wi + r * grad[i]
+        print(w_str(grad), end=" & ")
+        print(w_str(w[1:]), end=" & ")
+        print(round(w[0], 4), end=" \\\\ \\hline ")
+        print("")
+
+        w = w_t_1
 
 
 
@@ -221,5 +267,7 @@ def linearMain():
 
 
 if __name__ == '__main__':
+    # question5()
     linearMain()
     # linearMain([1])
+    question5c()
