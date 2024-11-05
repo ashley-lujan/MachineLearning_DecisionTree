@@ -18,15 +18,7 @@ def perception_update(train_x, train_y, w, r):
             w += (r * yi * xi)
     return w
 
-def voted_perception_update(train_x, train_y, w, r): 
-    for xi, yi in zip(train_x, train_y): 
-        y_prime = predict(xi, w)
-        if yi != y_prime: 
-            if yi == 0: 
-                yi = -1
-            w += (r * yi * xi)
-        a += w
-    return a
+
 
 def averaged_perception_update(train_x, train_y, a, r): 
     w = np.zeros(train_x.shape[1])
@@ -51,11 +43,30 @@ def perception(train_x, train_y, d, epochs, r):
         w = perception_update(train_x, train_y, w, r)
     return w 
 
+def voted_perception_update(train_x, train_y, c, w, r): 
+    weights = []
+    for xi, yi in zip(train_x, train_y): 
+        y_prime = predict(xi, w)
+        if yi != y_prime: 
+            weights.append((w, c))
+            if yi == 0: 
+                yi = -1
+            w += (r * yi * xi)
+            c = 1
+        else: 
+            c += 1
+        a += w
+    return a
+
 def voted(train_x, train_y, d, epochs, r):
     w = np.zeros(d)
     m = np.zeros(d)
+    c = 0
+    all_weights = []
     for epoch in range(epochs): 
-        w = perception_update(train_x, train_y, w, r)
+        weights = perception_update(train_x, train_y, w, c, r)
+        all_weights += weights
+        w, c = weights[len(weights)]
     return w 
 
 def averaged_perception(train_x, train_y, d, epochs, r):
@@ -95,6 +106,8 @@ if __name__ == "__main__":
 
     w = perception(train_x, train_y, d, perception_epoch, 1)
     report_results(w, test_x, test_y)
+
+    weights = voted(train_x, train_y, d, perception_epoch, 1)
 
     a = averaged_perception(train_x, train_y, d, perception_epoch, 1)
     report_results(a, test_x, test_y)
