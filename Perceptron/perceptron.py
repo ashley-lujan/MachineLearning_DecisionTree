@@ -31,17 +31,27 @@ def averaged_perception_update(train_x, train_y, a, r):
         a += w
     return a
 
+
+
+
 def predict(xi, w): 
     yi = w @ xi
     if yi > 0: 
         return 1
     return 0
 
-def perception(train_x, train_y, d, epochs, r):
+def perception(train_data, d, epochs, r):
     w = np.zeros(d)
     for epoch in range(epochs): 
+        train_x, train_y = shuffle(train_data)
         w = perception_update(train_x, train_y, w, r)
     return w 
+
+def shuffle(train_data): 
+    np.random.shuffle(train_data)
+    train_x = train_data[:, :4]
+    train_y = train_data[:, 4]
+    return train_x, train_y
 
 def voted_perception_update(train_x, train_y, c, w, r): 
     weights = []
@@ -108,7 +118,21 @@ def report_voted_results(weights, test_x, test_y):
     return correct / (test_x).shape[0]
 
 
-    
+def save_voted_weights(weights): 
+    with open("weights.txt", "w") as f:
+        for w, c in weights: 
+            w_string = np.array2string(w, separator=",", precision=3)
+           # f.write("{} & ${}$ \\ \\ \\hline \n".format(c, w_string))
+            f.write("c: {}, weight: {}\n".format(c, w_string))
+
+
+def voted_total(weights): 
+    w = np.zeros(len(weights[0][0]))
+    for wi, c in weights: 
+        w += (c * wi)
+    return w
+
+
 
 if __name__ == "__main__":
     train_data_filename = "datasets/bank-note/train.csv"
@@ -126,14 +150,24 @@ if __name__ == "__main__":
     test_x = test_data[:, :4]
     test_y = test_data[:, 4]
 
-    w = perception(train_x, train_y, d, perception_epoch, 1)
+    w = perception(train_data, d, perception_epoch, 1)
     report_results(w, test_x, test_y)
 
+    #regenerating train_x and train_y
+    train_data = np.genfromtxt(train_data_filename, delimiter=',', dtype=float) 
+
+    train_x = train_data[:, :4]
+    train_y = train_data[:, 4]
+
     weights = voted(train_x, train_y, d, perception_epoch, 1)
+    save_voted_weights(weights)
     test_error = report_voted_results(weights, test_x, test_y)
     print("Voted perception has test error {}".format(test_error))
 
     a = averaged_perception(train_x, train_y, d, perception_epoch, 1)
     report_results(a, test_x, test_y)
+
+    weights_total = voted_total(weights)
+    print("In comparison, the total w * c for voted is {}".format(weights_total))
 
 
