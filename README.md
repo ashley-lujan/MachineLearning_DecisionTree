@@ -6,3 +6,6 @@ If you wish to change the number of trees for a 'bag', change the number T in th
 
 # Linear Regression
 To run the linear regression code, run linearRegression.py. The linearMain() function is where gradient and stochastic are being called. The function descent() allows you to specify what r values you will like to experiment with, along with which specific descent you would like (gradient or stochastic).
+
+# Perceptron
+To run the perceptron code, run Perceptron/perceptron.py. If you wish to modify the training and test examples, modify what train_data_filename and test_data_filename have stored in the main function. 
