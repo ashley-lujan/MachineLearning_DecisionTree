@@ -1,9 +1,10 @@
 import numpy as np
+from dual_svm import perform_dual_svm
 
 def stochastic_svm(training_data, tune_rate, C, epochs):
     #let w be w with bias vector
-    d = train_data.shape[1]
-    n = train_data.shape[0]
+    d = training_data.shape[1]
+    n = training_data.shape[0]
     w = np.zeros(d - 1) 
     # w0 = np.zeros(d - 2)
     for t in range(epochs): 
@@ -53,25 +54,21 @@ def learning_rate_a(t, y0 = 0.1, a = 1):
 def learning_rate_b(t, y0 = 0.1):
     return (y0)/(1 + t)
 
+def process_labels(dataset):
+    d = dataset.shape[1]
+    labels = np.where(dataset[:, d - 1] == 0, -1, dataset[:, d-1])
+    dataset[:, d-1] = labels
 
 
 
-if __name__ == "__main__":
-    #use rate, use different c's
+def perform_primal_svm(train_data_filename, test_data_filename): 
 
-    train_data_filename = "datasets/bank-note/train.csv"
-    test_data_filename = "datasets/bank-note/test.csv"
-
-    test_data = np.genfromtxt(test_data_filename, delimiter=',', dtype=float) 
     train_data = np.genfromtxt(train_data_filename, delimiter=',', dtype=float) 
-    d = train_data.shape[1]
-
-    #rewrite 0
-    train_data[:, d - 1] = np.where(train_data[:, d - 1] == 0, -1, train_data[:, d-1])
-    test_data[:, d - 1] = np.where(test_data[:, d - 1] == 0, -1, test_data[:, d-1])
-
-    #SVM Experiment 
-    #append ones to data
+    test_data = np.genfromtxt(test_data_filename, delimiter=',', dtype=float) 
+    
+    process_labels(train_data)
+    process_labels(test_data)
+    
     train_data = attach_ones(train_data)
     test_data = attach_ones(test_data)
 
@@ -82,10 +79,16 @@ if __name__ == "__main__":
         for c in C: 
             print("C = {}".format(c))
             w = stochastic_svm(train_data, learn_rate, C[0], 100)
-            # report_results(w, train_data, "train")
+            report_results(w, train_data, "train")
             report_results(w, test_data, "test")
 
+if __name__ == "__main__":
+    #use rate, use different c's
 
+    train_data_filename = "datasets/bank-note/train.csv"
+    test_data_filename = "datasets/bank-note/test.csv"
+    perform_primal_svm(train_data_filename, test_data_filename)
+    perform_dual_svm(train_data_filename, test_data_filename)
     
 
 
