@@ -9,3 +9,6 @@ To run the linear regression code, run linearRegression.py. The linearMain() fun
 
 # Perceptron
 To run the perceptron code, run Perceptron/perceptron.py. If you wish to modify the training and test examples, modify what train_data_filename and test_data_filename have stored in the main function. 
+
+# SVM
+To run SVM the primal SVM, run SVM/svm.py. To run dual SVM, run SVM/dual_svm.py
