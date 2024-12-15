@@ -28,7 +28,7 @@ class Neuron:
         self.value = self.activator(val)
     
     def updateDeriv(self):
-        if self.is_y:
+        if not self.is_y:
             derivative = 0 
             for w in self.outgoing:
                 derivative +=( w.value * w.towards.der * self.value * (1 - self.value))
