@@ -62,36 +62,46 @@ class Weight:
         return 'Weight{}: Value {}'.format(self.id, self.value)
 
 class Network:
-    def __init__(self, d, layers, activator):
+    def __init__(self, d, layers, hidden_width, activator, y_activator):
         self.d = d + 1 #add one for bias
         self.neurons = [] #layer 0 should be input
         self.weights = []
         self.activator = activator
         self.layers = layers
+        self.hidden_width = hidden_width
         self.edges = []
+        self.y_activator = y_activator
 
         self.create_neurons()
         self.attach_edges()
 
-        
-        
-        print(len(self.neurons))
 
     def create_neurons(self):
         hidden_size = self.layers
-        #technically this creates the input size too
-        for layer in range(hidden_size):
+        #create input size seperately
+        # add bias
+        current_layer = []
+        layer = 1
+        biasNeuron = Neuron(self.activator, 0, layer, 1)
+        current_layer.append(biasNeuron)            
+        for i in range(1, self.d): #make it size of shape
+            neur = Neuron(self.activator, i, layer)
+            current_layer.append(neur)
+        self.neurons.append(current_layer)
+
+        #create layer 1 and layer 2
+        for layer in range(1, hidden_size):
             # add bias
             current_layer = []
             biasNeuron = Neuron(self.activator, 0, layer, 1)
             current_layer.append(biasNeuron)            
-            for i in range(1, self.d):
+            for i in range(1, self.hidden_width):
                 neur = Neuron(self.activator, i, layer)
                 current_layer.append(neur)
             self.neurons.append(current_layer)
         #add final y
         final_layer = []
-        final_layer.append(Neuron(linear, 0, self.layers, 100, True))
+        final_layer.append(Neuron(self.y_activator, 0, self.layers, 100, True))
         self.neurons.append(final_layer)
 
     
@@ -99,7 +109,6 @@ class Network:
         #attach every node at level i to level i + 1
         weights = []
         layer_size = len(self.neurons)
-        print("num of lyaers", layer_size)
         for i in range(layer_size - 1):
             layer_i = self.neurons[i]
             next_layer_j = self.neurons[i + 1]
@@ -133,6 +142,7 @@ class Network:
     #does a prediction for y , do not want to update any biases
     def forward_pass(self, x):
         if len(x) != (self.d - 1):
+            print("invalid x")
             return -math.inf
         self.updateInputs(x)
         for i in range(1, self.layers): 
@@ -211,9 +221,15 @@ def sigmoid(x):
 def linear(x):
     return x
 
+def sgn(x):
+    if x > 0:
+        return 1
+    else:
+        return 0
 
-if __name__ == '__main__':
-    network = Network(2, 3, sigmoid)
+
+def paper_question():
+    network = Network(2, 3, 3, sigmoid)
     x = [1, 1]
     y = 1
     init_w = [-1, 1, -2, 2, -3, 3, -1, 1, -2, 2, -3, 3, -1, 2, -1.5]
@@ -221,4 +237,6 @@ if __name__ == '__main__':
     print(network.getW())
     print(network.getGradient(x, y))
 
-    # print(sigmoid(1))
+
+    
+
