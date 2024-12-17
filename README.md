@@ -12,3 +12,8 @@ To run the perceptron code, run Perceptron/perceptron.py. If you wish to modify 
 
 # SVM
 To run SVM the primal SVM, run SVM/svm.py. To run dual SVM, run SVM/dual_svm.py
+
+# Neural Networks
+To use neural networks, run the main.py file. To create your own neural network, use the Network class. You can specify the width of the hidden layers as well as the activation functions for the inner neurons and the y node. 
+
+
